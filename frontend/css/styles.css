@@ -1,0 +1,256 @@
+/* SmartHire Finance Professional Corporate Styling */
+:root {
+  --primary-navy: #0f172a;
+  --secondary-navy: #1e293b;
+  --accent-gold: #f59e0b;
+  --brand-blue: #2563eb;
+  --brand-blue-hover: #1d4ed8;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #334155;
+  background-color: #f8fafc;
+}
+
+.bg-navy {
+  background-color: var(--primary-navy) !important;
+}
+
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
+}
+
+.bg-gold {
+  background-color: var(--accent-gold) !important;
+}
+
+.text-muted-light {
+  color: #94a3b8 !important;
+}
+
+.fs-7 { font-size: 0.875rem !important; }
+.fs-8 { font-size: 0.775rem !important; }
+.fs-9 { font-size: 0.700rem !important; }
+
+.min-vh-60 {
+  min-height: 60vh;
+}
+
+/* Upload Zone */
+.upload-zone {
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+.upload-zone:hover {
+  background-color: #f1f5f9 !important;
+  border-color: var(--brand-blue) !important;
+}
+
+/* Assessment Options */
+.option-card {
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+  border: 1.5px solid #e2e8f0;
+}
+.option-card:hover {
+  border-color: #93c5fd;
+  background-color: #f8fafc;
+}
+.option-card.selected {
+  border-color: var(--brand-blue) !important;
+  background-color: #eff6ff !important;
+}
+
+/* Question Palette */
+.palette-btn {
+  width: 100%;
+  height: 36px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  color: #475569;
+  transition: all 0.1s ease-in-out;
+}
+.palette-btn:hover {
+  border-color: var(--brand-blue);
+  color: var(--brand-blue);
+}
+.palette-btn.active {
+  ring: 2px;
+  outline: 2px solid var(--brand-blue);
+  font-weight: 800;
+}
+.palette-btn.answered {
+  background-color: #22c55e !important;
+  color: #ffffff !important;
+  border-color: #16a34a !important;
+}
+.palette-btn.flagged {
+  background-color: #f59e0b !important;
+  color: #ffffff !important;
+  border-color: #d97706 !important;
+}
+
+.palette-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* Timer warning pulsation */
+@keyframes timerPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+.timer-danger {
+  animation: timerPulse 1s infinite;
+  background-color: #dc2626 !important;
+}
+
+/* ========================================================================= */
+/* FLAWLESS MULTI-PAGE EXECUTIVE PRINT STYLING                               */
+/* ========================================================================= */
+@media print {
+  /* 1. Reset Global HTML & Body Constraints */
+  html, body, body.modal-open {
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 100% !important;
+    background: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* 2. Hide everything outside the candidate report modal */
+  body > *:not(#candidateReportModal) {
+    display: none !important;
+  }
+
+  /* 3. Reconfigure Modal as Standard Flow Document */
+  #candidateReportModal {
+    display: block !important;
+    position: static !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .modal-dialog {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+  }
+
+  .modal-content {
+    border: none !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    height: auto !important;
+    overflow: visible !important;
+    border-radius: 0 !important;
+  }
+
+  .modal-header {
+    background-color: #0f172a !important;
+    color: #ffffff !important;
+    border-bottom: 2px solid #2563eb !important;
+    padding: 1.25rem 1.5rem !important;
+    border-radius: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .modal-body {
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+    padding: 1.5rem 1.5rem !important;
+    background: #ffffff !important;
+  }
+
+  /* 4. Hide Interactive & Non-Print Elements */
+  .modal-header button,
+  .modal-header .btn,
+  .btn-close,
+  .no-print,
+  button {
+    display: none !important;
+  }
+
+  /* 5. Prevent Broken Cards & Control Pagination */
+  .card {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: none !important;
+    margin-bottom: 1.25rem !important;
+    background: #ffffff !important;
+    border-radius: 8px !important;
+  }
+
+  /* 6. High Quality Chart Printing */
+  canvas {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  .chart-container {
+    height: 260px !important;
+    position: relative !important;
+  }
+
+  /* 7. Tables & Timeline Styling */
+  table {
+    page-break-inside: auto !important;
+    width: 100% !important;
+  }
+  tr {
+    page-break-inside: avoid !important;
+    page-break-after: auto !important;
+  }
+  thead {
+    display: table-header-group !important;
+  }
+
+  .proctoring-timeline {
+    max-height: none !important;
+    overflow-y: visible !important;
+  }
+
+  /* 8. Accurate Colors and Background Printing */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  .bg-primary { background-color: #2563eb !important; color: #ffffff !important; }
+  .bg-success { background-color: #16a34a !important; color: #ffffff !important; }
+  .bg-warning { background-color: #d97706 !important; color: #ffffff !important; }
+  .bg-danger { background-color: #dc2626 !important; color: #ffffff !important; }
+  .bg-light { background-color: #f8fafc !important; }
+  
+  .badge {
+    border: 1px solid #cbd5e1 !important;
+  }
+  .progress {
+    height: 8px !important;
+    background-color: #e2e8f0 !important;
+    border: 1px solid #cbd5e1 !important;
+  }
+}

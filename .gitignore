@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# SQLite databases and backups (contain candidate PII — never commit)
+*.db
+*.db-journal
+*.sqlite3
+smarthire_backup_*.db
+
+# Uploaded resumes (candidate PII — never commit)
+backend/uploads/
+
+# Environment / secrets
+.env
+.env.*
+
+# Node (only used for local test tooling)
+node_modules/
+
+# Logs & OS cruft
+*.log
+.DS_Store
+Thumbs.db

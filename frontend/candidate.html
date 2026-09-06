@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartHire Assessment Portal — 80 Questions (60 Mins)</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/css/styles.css">
+  <style>
+    .palette-btn {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      font-size: 0.78rem;
+      font-weight: 700;
+      border-radius: 8px;
+    }
+
+    .palette-btn.answered {
+      background-color: #10b981 !important;
+      color: white !important;
+      border-color: #10b981 !important;
+    }
+
+    .palette-btn.current {
+      border: 2px solid #3b82f6 !important;
+      font-weight: 800;
+      transform: scale(1.1);
+    }
+
+    .palette-btn.flagged {
+      background-color: #f59e0b !important;
+      color: white !important;
+    }
+
+    .option-card {
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+    }
+
+    .option-card:hover {
+      border-color: #3b82f6;
+      background-color: #f8fafc;
+    }
+
+    .option-card.selected {
+      border-color: #2563eb;
+      background-color: #eff6ff;
+    }
+  </style>
+</head>
+
+<body class="bg-light user-select-none" oncontextmenu="return false;">
+
+  <!-- Header Banner (Zero Manager Links) -->
+  <header class="bg-navy text-white py-3 px-4 shadow-sm border-bottom border-primary border-3">
+    <div class="container-fluid d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <div>
+        <h4 class="fw-bold tracking-wide mb-0 text-white">SmartHire <span class="text-primary-light">Assessment
+            Portal</span></h4>
+        <div class="fs-8 text-white-50">80% Role Accounting & Finance (64 Qs) • 20% Resume Verification (16 Qs)</div>
+      </div>
+      <div class="text-md-end">
+        <div class="badge bg-primary text-white fs-7 px-3 py-2 fw-bold">80 QUESTIONS | 60 MINUTES</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container-fluid py-4 px-lg-4">
+
+    <!-- ============================================================== -->
+    <!-- STAGE 1: Candidate Registration & Details Form                 -->
+    <!-- ============================================================== -->
+    <div id="candidate-stage-register" class="container py-4">
+      <div class="row justify-content-center">
+        <div class="col-lg-9 col-xl-8">
+          <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card-header bg-gradient-primary text-white p-4">
+              <h4 class="fw-bold mb-1"><i class="fa-solid fa-user-pen me-2"></i> Candidate Registration</h4>
+              <p class="mb-0 text-white-50 fs-7">Complete your information and upload your resume to generate your
+                examination</p>
+            </div>
+            <div class="card-body p-4 p-md-5">
+              <form id="candidateRegisterForm" onsubmit="handleCandidateRegister(event)">
+                <div class="row g-3">
+
+                  <div class="col-md-12">
+                    <label class="form-label fw-semibold fs-7 text-dark">Target Role Applying For <span
+                        class="text-danger">*</span></label>
+                    <select id="reg_applied_role" class="form-select form-select-lg fs-7 border-primary-subtle"
+                      required>
+                      <option value="" disabled selected>Select Job Role</option>
+                      <option value="Accountant">Accountant</option>
+                      <option value="Senior Accountant">Senior Accountant</option>
+                      <option value="Finance Manager">Finance Manager</option>
+                    </select>
+                    <div class="form-text fs-8 text-muted">Role baseline questions will be calibrated to your selected
+                      position.</div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold fs-7 text-dark">Full Name <span
+                        class="text-danger">*</span></label>
+                    <input type="text" id="reg_full_name" class="form-control" placeholder="e.g. Rahul Sharma" required>
+                  </div>
+
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold fs-7 text-dark">Email Address <span
+                        class="text-danger">*</span></label>
+                    <input type="email" id="reg_email" class="form-control" placeholder="rahul.sharma@example.com"
+                      required>
+                  </div>
+
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold fs-7 text-dark">Mobile No. <span
+                        class="text-danger">*</span></label>
+                    <input type="tel" id="reg_phone" class="form-control" placeholder="+91 98765 43210" required>
+                  </div>
+
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold fs-7 text-dark">Relevant Experience (Years)</label>
+                    <input type="number" step="0.5" id="reg_experience" class="form-control" placeholder="e.g. 3.0"
+                      min="0">
+                  </div>
+
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold fs-7 text-dark">Current / Last Employer</label>
+                    <input type="text" id="reg_company" class="form-control" placeholder="e.g. Apex Packaging Pvt Ltd">
+                  </div>
+
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold fs-7 text-dark">Software Worked On</label>
+                    <input type="text" id="reg_software" class="form-control"
+                      placeholder="e.g. Tally Prime, Busy, Zoho Books, Oracle, ERP">
+                  </div>
+
+                  <!-- Resume Upload -->
+                  <div class="col-md-12">
+                    <div class="p-3 bg-primary-subtle rounded-3 border border-primary-subtle">
+                      <label class="form-label fw-bold fs-7 text-dark mb-1">
+                        <i class="fa-solid fa-file-arrow-up text-primary me-1"></i> Upload Resume (PDF / DOCX) <span
+                          class="text-danger">* (Compulsory)</span>
+                      </label>
+                      <input type="file" id="reg_resume" class="form-control form-control-lg bg-white"
+                        accept=".pdf,.doc,.docx" required>
+                      <div class="fs-8 text-muted mt-2">
+                        <i class="fa-solid fa-shield-check text-success me-1"></i> Mandatory: Our AI parses your resume
+                        to craft 16 custom questions (20% of assessment) verifying your claimed skills.
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-12 mt-4">
+                    <button type="submit" id="btnRegisterSubmit"
+                      class="btn btn-primary btn-lg w-100 fw-bold py-3 shadow">
+                      Proceed to Assessment Pre-Check <i class="fa-solid fa-arrow-right ms-2"></i>
+                    </button>
+                  </div>
+
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- STAGE 2: Assessment Instructions & Pre-Check                   -->
+    <!-- ============================================================== -->
+    <div id="candidate-stage-instructions" class="container py-4 d-none">
+      <div class="row justify-content-center">
+        <div class="col-lg-9 col-xl-8">
+          <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-header bg-navy text-white p-4">
+              <h4 class="fw-bold mb-1"><i class="fa-solid fa-shield-halved text-warning me-2"></i> Assessment Rules &
+                Guidelines</h4>
+              <p class="mb-0 text-white-50 fs-7">Please review the rules before starting your 60-minute proctored
+                session</p>
+            </div>
+            <div class="card-body p-4 p-md-5">
+
+              <div class="alert alert-info border-0 rounded-3 mb-4">
+                <div class="d-flex align-items-center gap-3">
+                  <i class="fa-solid fa-clock display-6 text-primary"></i>
+                  <div>
+                    <h6 class="fw-bold mb-1">Total Duration: 60 Minutes (3,600 Seconds)</h6>
+                    <p class="fs-8 mb-0">Total Questions: <strong>80 MCQs</strong> (64 Core Role Questions + 16 Resume
+                      Verification Questions).</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mb-4">
+                <h6 class="fw-bold text-dark mb-2"><i class="fa-solid fa-triangle-exclamation text-danger me-1"></i>
+                  Background Proctoring Policy:</h6>
+                <ul class="list-group list-group-flush fs-7">
+                  <li class="list-group-item px-0 text-dark"><strong>No Tab or Window Switching:</strong> Navigating
+                    away from this tab or pressing Alt+Tab will log an integrity violation for management review.</li>
+                  <li class="list-group-item px-0 text-dark"><strong>Copy-Paste is Disabled:</strong> Text selection and
+                    clipboard operations are locked.</li>
+                  <li class="list-group-item px-0 text-dark"><strong>Real-Time Autosave:</strong> Every question
+                    response is automatically saved instantly.</li>
+                </ul>
+              </div>
+
+              <div class="form-check p-3 bg-light rounded-3 border mb-4">
+                <input class="form-check-input ms-0 me-2" type="checkbox" id="agreeRulesCheck" required>
+                <label class="form-check-label fw-semibold fs-7 text-dark" for="agreeRulesCheck">
+                  I have read and agree to all examination guidelines. I am ready to begin the 60-minute assessment.
+                </label>
+              </div>
+
+              <div class="d-flex gap-3">
+                <button type="button" class="btn btn-outline-secondary px-4 fw-semibold"
+                  onclick="returnToRegisterStage()">Back</button>
+                <button type="button" id="btnStartAssessment" class="btn btn-success flex-grow-1 py-3 fw-bold shadow"
+                  onclick="startAssessmentSession()">
+                  Start Assessment Now <i class="fa-solid fa-play ms-2"></i>
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- STAGE 3: Full Assessment Runner                                -->
+    <!-- ============================================================== -->
+    <div id="candidate-stage-exam" class="container-fluid py-2 d-none">
+
+      <!-- Top Status Banner -->
+      <div class="row g-3 mb-3 align-items-center bg-white p-3 rounded-4 shadow-sm border mx-0">
+        <div class="col-md-4">
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-primary fs-7 px-3 py-2" id="examCandidateRole">Accountant</span>
+            <span class="fs-7 text-dark fw-bold" id="examCandidateName">Rahul Sharma</span>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="d-flex align-items-center justify-content-between fs-8 mb-1">
+            <span class="text-muted fw-semibold">Progress: <span id="answeredCount">0</span> / 80 Answered</span>
+            <span class="fw-bold text-primary" id="progressPercentage">0%</span>
+          </div>
+          <div class="progress" style="height: 6px;">
+            <div class="progress-bar bg-success" id="examProgressBar" role="progressbar" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <div class="col-md-4 text-md-end">
+          <div class="d-inline-flex align-items-center gap-2 bg-navy text-white px-4 py-2 rounded-pill shadow-sm">
+            <i class="fa-solid fa-stopwatch text-warning fs-5"></i>
+            <span class="fw-bold font-monospace fs-5" id="timerDisplay">60:00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Proctoring Alert Banner -->
+      <div id="proctorWarningBanner"
+        class="alert alert-danger border-0 shadow-sm rounded-3 py-2 px-3 mb-3 d-none d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2 fs-7">
+          <i class="fa-solid fa-triangle-exclamation fs-5"></i>
+          <span><strong>Integrity Notice:</strong> Window / Tab switch detected. All events are logged for management
+            review.</span>
+        </div>
+        <span class="badge bg-danger text-white" id="violationCountBadge">Violations: 0</span>
+      </div>
+
+      <!-- Exam Workspace -->
+      <div class="row g-4">
+
+        <!-- Main Question Area -->
+        <div class="col-lg-8 col-xl-9">
+          <div
+            class="card border-0 shadow-sm rounded-4 p-4 p-md-5 min-vh-60 d-flex flex-column justify-content-between">
+
+            <div>
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="d-flex align-items-center gap-2">
+                  <span class="badge bg-primary fs-7 px-3 py-2" id="qNumberBadge">Question 1 of 80</span>
+                  <span class="badge bg-info-subtle text-info border border-info-subtle fs-8"
+                    id="qCategoryBadge">Category</span>
+                  <span class="badge bg-light text-secondary border fs-8" id="qTypeBadge">Standard</span>
+                </div>
+                <button type="button" class="btn btn-outline-warning btn-sm fs-8 fw-semibold" id="btnFlagQuestion"
+                  onclick="toggleFlagCurrentQuestion()">
+                  <i class="fa-regular fa-bookmark me-1"></i> Mark for Review
+                </button>
+              </div>
+
+              <!-- Question Text -->
+              <div class="question-text fs-5 fw-semibold text-dark mb-4 lh-base" id="qTextDisplay">
+                Loading question...
+              </div>
+
+              <!-- Options -->
+              <div class="options-container d-flex flex-column gap-3" id="optionsContainer">
+                <!-- Dynamically populated via JS -->
+              </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="d-flex align-items-center justify-content-between mt-5 pt-3 border-top">
+              <button type="button" class="btn btn-outline-secondary px-4 fw-semibold" id="btnPrevQ"
+                onclick="navigateQuestion(-1)">
+                <i class="fa-solid fa-chevron-left me-1"></i> Previous
+              </button>
+              <div class="d-flex align-items-center gap-2">
+                <span class="fs-8 text-muted d-none d-sm-inline" id="autosaveStatus">
+                  <i class="fa-solid fa-cloud-arrow-up text-success"></i> Auto-saved
+                </span>
+                <button type="button" class="btn btn-outline-danger btn-sm" onclick="clearCurrentAnswer()">
+                  Clear Answer
+                </button>
+              </div>
+              <button type="button" class="btn btn-primary px-4 fw-semibold shadow-sm" id="btnNextQ"
+                onclick="navigateQuestion(1)">
+                Next <i class="fa-solid fa-chevron-right ms-1"></i>
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Question Palette -->
+        <div class="col-lg-4 col-xl-3">
+          <div class="card border-0 shadow-sm rounded-4 p-3 sticky-top" style="top: 80px;">
+            <h6 class="fw-bold mb-2 text-dark d-flex align-items-center justify-content-between">
+              <span>Question Palette</span>
+              <span class="badge bg-light text-dark fs-8 border">80 Total</span>
+            </h6>
+
+            <div class="d-flex flex-wrap gap-2 mb-3 fs-8 text-muted py-2 border-bottom">
+              <span class="d-flex align-items-center gap-1"><span class="palette-dot bg-success"></span> Answered</span>
+              <span class="d-flex align-items-center gap-1"><span class="palette-dot bg-warning"></span> Review</span>
+              <span class="d-flex align-items-center gap-1"><span class="palette-dot bg-light border"></span>
+                Unanswered</span>
+            </div>
+
+            <div class="palette-grid d-grid gap-1" id="paletteGrid"
+              style="grid-template-columns: repeat(8, 1fr); max-height: 380px; overflow-y: auto;">
+              <!-- Populated via JS -->
+            </div>
+
+            <div class="mt-3 pt-2 border-top">
+              <button type="button" class="btn btn-danger w-100 fw-bold py-2 shadow-sm" onclick="confirmSubmitModal()">
+                <i class="fa-solid fa-paper-plane me-1"></i> Finish & Submit
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- STAGE 4: Clean Submission Confirmation                         -->
+    <!-- ============================================================== -->
+    <div id="candidate-stage-completed" class="container py-5 d-none">
+      <div class="row justify-content-center">
+        <div class="col-lg-7 col-xl-6 text-center">
+          <div class="card border-0 shadow-sm rounded-4 p-5">
+            <div class="mb-4">
+              <div class="d-inline-flex bg-success-subtle text-success p-4 rounded-circle mb-3">
+                <i class="fa-solid fa-circle-check display-3"></i>
+              </div>
+              <h3 class="fw-bold text-dark">Assessment Submitted Successfully</h3>
+              <p class="text-muted fs-7 mb-0">Your responses have been securely recorded.</p>
+            </div>
+
+            <div class="p-4 bg-light rounded-3 border text-start mb-4">
+              <h6 class="fw-bold mb-2 text-dark"><i class="fa-solid fa-circle-info text-primary me-2"></i> Next Steps in
+                Recruitment Process</h6>
+              <p class="fs-8 text-muted mb-2">
+                Our Accounts & Finance management team is reviewing your assessment evaluation, resume verification, and
+                domain scoring.
+              </p>
+              <p class="fs-8 text-muted mb-0">
+                If shortlisted, our HR talent team will contact you directly regarding the next round of in-person
+                technical interviews.
+              </p>
+            </div>
+
+            <div class="text-muted fs-8">
+              You may now safely close this browser window.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Submit Confirmation Modal -->
+  <div class="modal fade" id="submitConfirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content rounded-4 border-0 shadow">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold text-dark"><i class="fa-solid fa-circle-question text-warning me-2"></i>
+            Confirm Assessment Submission</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body py-4">
+          <p class="text-dark fs-7 mb-3">Are you sure you want to finish and submit your assessment?</p>
+          <div class="p-3 bg-light rounded-3 border fs-8 text-muted">
+            <div><strong>Answered Questions:</strong> <span id="modalAnsweredCount"
+                class="fw-bold text-success">0</span> / 80</div>
+            <div><strong>Unanswered Questions:</strong> <span id="modalUnansweredCount"
+                class="fw-bold text-danger">80</span> / 80</div>
+            <div class="mt-2 text-dark">Once submitted, you will not be able to modify any responses.</div>
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-outline-secondary px-4 fw-semibold" data-bs-dismiss="modal">Continue
+            Exam</button>
+          <button type="button" class="btn btn-danger px-4 fw-bold" onclick="submitAssessmentFinal()">Yes, Submit
+            Now</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/candidate_app.js"></script>
+</body>
+
+</html>

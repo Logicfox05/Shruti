@@ -1,0 +1,32 @@
+# Render Blueprint for SmartHire Finance
+# One web service serving both portals at the same URL:
+#   - Candidate portal:  /            (open)
+#   - Manager portal:    "Manager Intelligence Portal" tab, password-protected
+#
+# A persistent disk keeps the SQLite database and uploaded resumes across restarts/redeploys.
+# (A disk requires a paid instance type. For the FREE plan, see DEPLOY.md — remove the disk
+#  and the DATABASE_URL / UPLOAD_DIR vars; data will then reset when the service restarts.)
+services:
+  - type: web
+    name: smarthire-finance
+    runtime: python
+    plan: starter          # paid tier required for a persistent disk
+    region: singapore      # closest Render region to India; change if you prefer
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    # Single process — SQLite is a single-writer file DB, so do NOT use multiple workers.
+    startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.10"
+      - key: MANAGER_PASSWORD      # set the real value in the Render dashboard (kept secret)
+        sync: false
+      - key: DATABASE_URL
+        value: sqlite:////var/data/smarthire.db
+      - key: UPLOAD_DIR
+        value: /var/data/uploads
+    disk:
+      name: smarthire-data
+      mountPath: /var/data
+      sizeGB: 1

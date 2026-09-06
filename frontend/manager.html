@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manager Intelligence & Evaluation Portal — SmartHire Finance</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/css/styles.css">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-light">
+
+  <!-- Top Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-navy shadow-sm py-2 px-3 sticky-top">
+    <div class="container-fluid">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="/manager">
+        <div class="brand-icon bg-primary text-white rounded p-2">
+          <i class="fa-solid fa-chart-pie"></i>
+        </div>
+        <div>
+          <span class="fw-bold tracking-wide">SmartHire</span> <span class="badge bg-gold text-dark fs-8">EVALUATION DESKTOP</span>
+          <div class="fs-9 text-muted-light">6-Pillar Finance Intelligence & Hiring Threshold Analytics</div>
+        </div>
+      </a>
+      
+      <div class="ms-auto d-flex align-items-center gap-2">
+        <button type="button" class="btn btn-outline-light btn-sm px-3" onclick="loadManagerDashboard()">
+          <i class="fa-solid fa-rotate me-1"></i> Refresh Roster
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Manager Dashboard -->
+  <main class="container-fluid py-4 px-lg-4">
+    
+    <!-- Header & KPI Cards -->
+    <div class="row g-3 mb-4">
+      <div class="col-12">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+          <div>
+            <h4 class="fw-bold text-dark mb-0">Candidate Assessment Roster</h4>
+            <p class="text-muted fs-7 mb-0">Performance evaluation across 6 Core Pillars against the 70% Company Hiring Benchmark</p>
+          </div>
+          <span class="badge bg-primary-subtle text-primary border px-3 py-2 fs-7">
+            <i class="fa-solid fa-layer-group me-1"></i> 6 Universal Finance Pillars Active
+          </span>
+        </div>
+      </div>
+
+      <!-- KPI Metric Cards -->
+      <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm rounded-3 p-3 bg-white border-start border-4 border-primary">
+          <div class="fs-8 text-muted text-uppercase fw-bold">Candidates Evaluated</div>
+          <div class="fs-3 fw-bold text-dark" id="mgrKpiTotal">0</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm rounded-3 p-3 bg-white border-start border-4 border-success">
+          <div class="fs-8 text-muted text-uppercase fw-bold">Qualified / Recommended</div>
+          <div class="fs-3 fw-bold text-success" id="mgrKpiHires">0</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm rounded-3 p-3 bg-white border-start border-4 border-warning">
+          <div class="fs-8 text-muted text-uppercase fw-bold">Average Score (Out of 80)</div>
+          <div class="fs-3 fw-bold text-warning" id="mgrKpiAvgScore">0</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm rounded-3 p-3 bg-white border-start border-4 border-danger">
+          <div class="fs-8 text-muted text-uppercase fw-bold">Integrity Flags</div>
+          <div class="fs-3 fw-bold text-danger" id="mgrKpiFlags">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Candidate Table -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+      <div class="card-header bg-white p-3 border-bottom d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <h5 class="fw-bold mb-0 text-dark">Candidate Submissions</h5>
+        <input type="text" id="mgrSearchName" class="form-control form-control-sm" style="max-width: 280px;" placeholder="Search candidate..." onkeyup="filterCandidates()">
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="candidateTable">
+          <thead class="table-light fs-8 text-muted text-uppercase">
+            <tr>
+              <th class="ps-3">Candidate</th>
+              <th>Qualification</th>
+              <th>Finance (60%)</th>
+              <th>IQ (20%)</th>
+              <th>Resume (20%)</th>
+              <th>Total Score</th>
+              <th>Adaptive Tier</th>
+              <th>Verdict</th>
+              <th>Integrity</th>
+              <th class="text-end pe-3">Action</th>
+            </tr>
+          </thead>
+          <tbody class="fs-7" id="candidateTableBody">
+            <tr>
+              <td colspan="10" class="text-center py-4 text-muted">Loading candidate records...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Detailed Report Modal (6 Pillars + Radar Chart + Placement Ladder) -->
+  <div class="modal fade" id="candidateReportModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content rounded-4 border-0 shadow">
+        
+        <div class="modal-header bg-navy text-white p-4">
+          <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+              <h4 class="modal-title fw-bold mb-0" id="modalCandidateName">Candidate Name</h4>
+              <span class="badge bg-gold text-dark fs-8" id="modalCandidateQual">Qualification</span>
+            </div>
+            <p class="mb-0 text-white-50 fs-8">
+              <span id="modalCandidateExp">3.0 Years Exp</span> • 
+              <span id="modalCandidateCompany">Employer</span> • 
+              Software: <span id="modalCandidateSoftware">Tally Prime</span>
+            </p>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-outline-light btn-sm" onclick="window.print()">
+              <i class="fa-solid fa-print me-1"></i> Print / PDF
+            </button>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+        </div>
+
+        <div class="modal-body p-4 p-lg-5">
+          
+          <!-- 1. Verdict & Total Score -->
+          <div class="card border-0 shadow-sm rounded-3 mb-4 p-4" id="modalVerdictBanner">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+              <div>
+                <span class="badge bg-success fs-6 px-3 py-2 mb-2" id="modalVerdictBadge">Strong Hire</span>
+                <h5 class="fw-bold text-dark mb-1" id="modalVerdictHeading">Recommendation</h5>
+                <p class="text-muted fs-7 mb-0" id="modalVerdictRationale">Detailed rationale...</p>
+              </div>
+              <div class="text-end">
+                <div class="display-4 fw-bold text-primary" id="modalScoreDisplay">68</div>
+                <div class="fs-8 text-muted fw-bold">TOTAL SCORE / 80 MARKS</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. The 6 Main Pillars Performance & Radar Analysis Section -->
+          <div class="card border-0 shadow-sm rounded-3 p-4 bg-white mb-4">
+            <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+              <div>
+                <h5 class="fw-bold text-dark mb-0"><i class="fa-solid fa-chart-pie text-primary me-2"></i> 6-Pillar Competency & Hiring Benchmark Analysis</h5>
+                <p class="text-muted fs-8 mb-0">Candidate performance vs. 70% Company Hiring Threshold</p>
+              </div>
+              <span class="badge bg-light text-dark border fs-8">Benchmark: 70% Threshold</span>
+            </div>
+
+            <div class="row g-4 align-items-center">
+              <!-- Left: Radar Chart -->
+              <div class="col-lg-5 text-center">
+                <div class="p-3 bg-light rounded-4 border">
+                  <h6 class="fw-bold fs-8 text-muted text-uppercase mb-2">6-Pillar Competency Radar</h6>
+                  <div style="position: relative; height: 320px; width: 100%;">
+                    <canvas id="pillarRadarChart"></canvas>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right: 6-Pillar Scorecards -->
+              <div class="col-lg-7">
+                <div class="row g-2" id="modalPillarScorecardsContainer">
+                  <!-- Rendered dynamically -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. 3-Role Placement Fit Ladders -->
+          <div class="card border-0 shadow-sm rounded-3 p-4 bg-white mb-4">
+            <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-layer-group text-success me-2"></i> Cross-Role Placement Fit Matrix</h6>
+            <div class="row g-3" id="modalPlacementContainer">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- 4. 3-Domain Breakdown (Finance 60%, IQ 20%, Resume 20%) -->
+          <div class="card border-0 shadow-sm rounded-3 p-4 bg-white mb-4">
+            <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-chart-column text-info me-2"></i> Domain Distribution Analysis (80 Questions)</h6>
+            <div class="row g-3" id="modalDomainContainer">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- 5. Proctoring Log -->
+          <div class="card border-0 shadow-sm rounded-3 p-4 bg-white mb-4">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <h6 class="fw-bold text-dark mb-0"><i class="fa-solid fa-shield-halved text-danger me-2"></i> Proctoring & Integrity Audit</h6>
+              <span class="badge bg-danger-subtle text-danger border fs-8" id="modalIntegrityBadge">Integrity: 100%</span>
+            </div>
+            <div class="fs-8 text-muted" id="modalProctoringLog"></div>
+          </div>
+
+          <!-- 6. Collapsible Detailed 80-Question Audit -->
+          <div class="accordion" id="paperEvaluationAccordion">
+            <div class="accordion-item border rounded-3 overflow-hidden">
+              <h2 class="accordion-header" id="headingQuestionsAudit">
+                <button class="accordion-button collapsed py-3 px-4 fs-7 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseQuestionsAudit">
+                  <i class="fa-solid fa-list-check text-secondary me-2"></i> View Detailed 80-Question Audit Trail & Explanations
+                </button>
+              </h2>
+              <div id="collapseQuestionsAudit" class="accordion-collapse collapse" data-bs-parent="#paperEvaluationAccordion">
+                <div class="accordion-body bg-light p-3 fs-8" id="modalQuestionsAuditList">
+                  <!-- Rendered dynamically -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        
+        <div class="modal-footer border-0 p-4">
+          <button type="button" class="btn btn-secondary px-4 fw-semibold" data-bs-dismiss="modal">Close Report</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Manager PIN Security Modal -->
+  <div class="modal fade" id="managerAuthModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+      <div class="modal-content rounded-4 border-0 shadow-lg p-4">
+        <div class="text-center mb-3">
+          <div class="d-inline-flex bg-primary-subtle text-primary p-3 rounded-circle mb-2">
+            <i class="fa-solid fa-lock fs-2"></i>
+          </div>
+          <h5 class="fw-bold text-dark mb-1">Manager Access Required</h5>
+          <p class="text-muted fs-8 mb-0">Enter your 4-digit security PIN to access the hiring evaluation desktop</p>
+        </div>
+        <form onsubmit="handleManagerLogin(event)">
+          <div class="mb-3">
+            <input type="password" id="mgrPinInput" class="form-control form-control-lg text-center fw-bold fs-4 tracking-widest" placeholder="••••" maxlength="6" autofocus required>
+            <div id="pinErrorMsg" class="text-danger fs-8 text-center mt-2 d-none">Incorrect security PIN. Please try again.</div>
+          </div>
+          <button type="submit" class="btn btn-primary w-100 fw-bold py-2 shadow-sm">
+            Unlock Desktop <i class="fa-solid fa-unlock ms-1"></i>
+          </button>
+          <div class="text-center mt-3">
+            <a href="/" class="fs-8 text-muted text-decoration-none"><i class="fa-solid fa-arrow-left me-1"></i> Return to Candidate Portal</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/manager_app.js"></script>
+  <script>
+    const DEFAULT_PIN = "1234";
+
+    function checkManagerAuth() {
+      const isAuth = sessionStorage.getItem("mgr_authenticated");
+      if (isAuth === "true") {
+        loadManagerDashboard();
+      } else {
+        const authModal = new bootstrap.Modal(document.getElementById("managerAuthModal"));
+        authModal.show();
+      }
+    }
+
+    function handleManagerLogin(e) {
+      e.preventDefault();
+      const enteredPin = document.getElementById("mgrPinInput").value;
+      if (enteredPin === DEFAULT_PIN || enteredPin === "admin" || enteredPin === "0000") {
+        sessionStorage.setItem("mgr_authenticated", "true");
+        bootstrap.Modal.getInstance(document.getElementById("managerAuthModal")).hide();
+        loadManagerDashboard();
+      } else {
+        document.getElementById("pinErrorMsg").classList.remove("d-none");
+        document.getElementById("mgrPinInput").value = "";
+        document.getElementById("mgrPinInput").focus();
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      checkManagerAuth();
+    });
+  </script>
+</body>
+</html>

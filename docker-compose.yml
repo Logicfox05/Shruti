@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  smarthire-app:
+    build: .
+    container_name: smarthire_finance
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:////app/backend/smarthire.db
+      - UPLOAD_DIR=/app/backend/uploads
+    volumes:
+      - smarthire_data:/app/backend
+
+volumes:
+  smarthire_data:
+    driver: local
