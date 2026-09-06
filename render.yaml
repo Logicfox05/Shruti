@@ -10,7 +10,7 @@ services:
   - type: web
     name: smarthire-finance
     runtime: python
-    plan: starter          # paid tier required for a persistent disk
+    plan: free             # free tier: no persistent disk (data resets on restart). See DEPLOY.md to upgrade.
     region: singapore      # closest Render region to India; change if you prefer
     branch: main
     buildCommand: pip install -r requirements.txt
@@ -22,11 +22,3 @@ services:
         value: "3.12.10"
       - key: MANAGER_PASSWORD      # set the real value in the Render dashboard (kept secret)
         sync: false
-      - key: DATABASE_URL
-        value: sqlite:////var/data/smarthire.db
-      - key: UPLOAD_DIR
-        value: /var/data/uploads
-    disk:
-      name: smarthire-data
-      mountPath: /var/data
-      sizeGB: 1
