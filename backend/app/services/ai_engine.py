@@ -3,6 +3,11 @@ import json
 import random
 import re
 from typing import List, Dict, Any
+from .adaptive_engine import SECTION_QUOTA
+
+# Every session is scored out of the FULL exam length (48 + 16 + 16 = 80). Questions the
+# candidate never reached or left blank count as wrong.
+TOTAL_QUESTIONS = sum(SECTION_QUOTA.values())
 
 class AIEngine:
     @staticmethod
@@ -479,9 +484,17 @@ class AIEngine:
 
     @staticmethod
     def generate_hiring_report(candidate: Any, session: Any, questions: List[Any], proctoring_events: List[Any]) -> Dict[str, Any]:
-        total_questions = len(questions)
+        # Scored out of the full exam, never out of the questions that happened to be served.
+        total_questions = TOTAL_QUESTIONS
+        served = len(questions)
+        answered = sum(1 for q in questions if (q.selected_option or "").strip())
         correct_count = sum(1 for q in questions if q.is_correct)
-        percentage = round((correct_count / total_questions * 100), 1) if total_questions > 0 else 0.0
+        percentage = round((correct_count / total_questions * 100), 1)
+        # Fraction of the exam the candidate actually reached. Tier scores are scaled by
+        # it so the verdict and role fit reflect the WHOLE exam: a candidate who quits
+        # after 15 questions cannot be rated on those 15 alone. (Blank answers among the
+        # served questions are already counted as wrong inside each tier.)
+        completion = served / total_questions if total_questions else 0.0
 
         levels_map = {"Basic": {"total": 0, "correct": 0}, "Intermediate": {"total": 0, "correct": 0}, "Advanced": {"total": 0, "correct": 0}}
         for q in questions:
@@ -492,13 +505,20 @@ class AIEngine:
             if q.is_correct:
                 levels_map[lvl]["correct"] += 1
 
-        basic_pct = round((levels_map["Basic"]["correct"] / levels_map["Basic"]["total"] * 100), 1) if levels_map["Basic"]["total"] > 0 else 0.0
-        inter_pct = round((levels_map["Intermediate"]["correct"] / levels_map["Intermediate"]["total"] * 100), 1) if levels_map["Intermediate"]["total"] > 0 else 0.0
-        adv_pct = round((levels_map["Advanced"]["correct"] / levels_map["Advanced"]["total"] * 100), 1) if levels_map["Advanced"]["total"] > 0 else 0.0
+        # Accuracy on the questions actually attempted in each tier (shown for context) ...
+        basic_acc = round((levels_map["Basic"]["correct"] / levels_map["Basic"]["total"] * 100), 1) if levels_map["Basic"]["total"] > 0 else 0.0
+        inter_acc = round((levels_map["Intermediate"]["correct"] / levels_map["Intermediate"]["total"] * 100), 1) if levels_map["Intermediate"]["total"] > 0 else 0.0
+        adv_acc = round((levels_map["Advanced"]["correct"] / levels_map["Advanced"]["total"] * 100), 1) if levels_map["Advanced"]["total"] > 0 else 0.0
+        # ... and the tier scores that drive the verdict / role fit, scaled to the full exam.
+        # On a fully completed exam these are identical to the accuracies.
+        basic_pct = round(basic_acc * completion, 1)
+        inter_pct = round(inter_acc * completion, 1)
+        adv_pct = round(adv_acc * completion, 1)
 
         cognitive_summary = {
             "basic": {
                 "score": basic_pct,
+                "accuracy": basic_acc,
                 "correct": levels_map["Basic"]["correct"],
                 "total": levels_map["Basic"]["total"],
                 "label": "Basic Tier (Foundations & Daily Tasks)",
@@ -506,6 +526,7 @@ class AIEngine:
             },
             "intermediate": {
                 "score": inter_pct,
+                "accuracy": inter_acc,
                 "correct": levels_map["Intermediate"]["correct"],
                 "total": levels_map["Intermediate"]["total"],
                 "label": "Intermediate Tier (Operational & Core Technical)",
@@ -513,6 +534,7 @@ class AIEngine:
             },
             "advanced": {
                 "score": adv_pct,
+                "accuracy": adv_acc,
                 "correct": levels_map["Advanced"]["correct"],
                 "total": levels_map["Advanced"]["total"],
                 "label": "Advanced Tier (Strategy, Controls & Architecture)",
@@ -542,6 +564,12 @@ class AIEngine:
             placement_verdict_title = "Do Not Hire (Fundamental Gaps Identified)"
             placement_advice = f"Candidate scored below baseline benchmarks ({basic_pct}% Basic, {inter_pct}% Intermediate). Not recommended for hiring."
             verdict_badge = "secondary"
+
+        if answered < total_questions:
+            placement_advice += (
+                f" Note: the candidate answered only {answered} of {total_questions} questions; "
+                f"the remaining {total_questions - answered} are scored as incorrect."
+            )
 
         # Role fit derived from actual tier performance, weighted by what each role depends
         # on: Accountant leans on foundations (Basic), Senior on operational (Intermediate),
@@ -653,7 +681,8 @@ class AIEngine:
         resume_questions = [q for q in questions if q.is_resume_based]
         resume_total = len(resume_questions)
         resume_correct = sum(1 for q in resume_questions if q.is_correct)
-        resume_score_pct = round((resume_correct / resume_total * 100), 1) if resume_total > 0 else 0.0
+        # Resume verification is a fixed 16-question section: score it out of all 16.
+        resume_score_pct = round((resume_correct / SECTION_QUOTA["resume"] * 100), 1)
 
         resume_audit = []
         for rq in resume_questions[:8]:
@@ -730,6 +759,11 @@ class AIEngine:
             "years_of_experience": candidate.years_of_experience,
             "current_company": candidate.current_company or "N/A",
             "overall_score": percentage,
+            "questions_total": total_questions,
+            "questions_served": served,
+            "questions_answered": answered,
+            "correct_answers": correct_count,
+            "completion_pct": round(completion * 100, 1),
             "total_questions": total_questions,
             "correct_answers": correct_count,
             "hiring_verdict": placement_verdict_title,

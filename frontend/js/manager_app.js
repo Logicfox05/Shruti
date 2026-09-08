@@ -246,6 +246,12 @@ async function viewCandidateReport(sessionId) {
     document.getElementById("modalVerdictBadge").className = `badge bg-${rep.verdict_badge} fs-6 px-3 py-2 mb-2`;
     document.getElementById("modalVerdictRationale").textContent = rep.placement_advice || rep.summary_rationale;
     document.getElementById("modalScoreDisplay").textContent = `${rep.overall_score}%`;
+    // The score is always out of the full exam; show how much of it was actually answered.
+    const scoreDetail = document.getElementById("modalScoreDetail");
+    if (scoreDetail && rep.questions_total) {
+      scoreDetail.textContent = `${rep.correct_answers} correct · answered ${rep.questions_answered} of ${rep.questions_total} questions`;
+      scoreDetail.className = rep.questions_answered < rep.questions_total ? "fs-8 text-danger fw-semibold" : "fs-8 text-muted";
+    }
 
     // 1. Populate Cross-Role Suitability Gauges
     const roleContainer = document.getElementById("modalRoleSuitabilityContainer");
@@ -296,7 +302,7 @@ async function viewCandidateReport(sessionId) {
             item.innerHTML = `
               <div class="d-flex justify-content-between align-items-center mb-1">
                 <span class="fw-bold text-dark fs-7"><i class="fa-solid ${lvl.icon} text-${lvl.color} me-1"></i> ${c.label}</span>
-                <span class="fw-bold text-${lvl.color} fs-7">${c.score}% (${c.correct}/${c.total})</span>
+                <span class="fw-bold text-${lvl.color} fs-7">${c.score}% (${c.correct}/${c.total})${(c.accuracy !== undefined && c.accuracy !== c.score) ? ` <span class="fw-normal text-muted">· ${c.accuracy}% on attempted</span>` : ""}</span>
               </div>
               <div class="progress mb-2" style="height: 7px;">
                 <div class="progress-bar bg-${lvl.color}" style="width: ${c.score}%"></div>
