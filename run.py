@@ -1,4 +1,5 @@
 import os
+import secrets
 import subprocess
 import uvicorn
 import webbrowser
@@ -8,9 +9,33 @@ import time
 HOST = "127.0.0.1"
 PORT = 8000
 
-# Manager-portal password used when the app is started via run.py / share.bat.
-# An explicitly set MANAGER_PASSWORD environment variable (e.g. on Render) still wins.
+# Credentials for the local bootstrap administrator, used when the app is started via
+# run.py / share.bat. Explicitly set environment variables (e.g. on Render) still win.
+os.environ.setdefault("MANAGER_EMAIL", "admin@smarthire.local")
 os.environ.setdefault("MANAGER_PASSWORD", "smarthire2026")
+
+
+def _local_secret_key():
+    """A stable signing key for local runs, kept in a gitignored file beside the database.
+
+    Without this a fresh random key is generated on every start, which logs every manager
+    out whenever the app restarts. Generated once, then reused; never committed.
+    """
+    key_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "backend", ".secret_key")
+    try:
+        if os.path.exists(key_path):
+            key = open(key_path, encoding="utf-8").read().strip()
+            if key:
+                return key
+        key = secrets.token_hex(32)
+        with open(key_path, "w", encoding="utf-8") as fh:
+            fh.write(key)
+        return key
+    except OSError:
+        return secrets.token_hex(32)  # fall back to a per-run key
+
+
+os.environ.setdefault("SECRET_KEY", _local_secret_key())
 
 
 def free_port(port):

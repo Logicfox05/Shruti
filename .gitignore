@@ -19,6 +19,7 @@ backend/uploads/
 
 # Environment / secrets
 .env
+backend/.secret_key
 .env.*
 
 # Node (only used for local test tooling)

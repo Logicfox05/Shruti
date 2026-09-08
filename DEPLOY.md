@@ -1,95 +1,117 @@
 # Deploying SmartHire Finance to Render
 
-One web service hosts **both portals at the same URL**:
+One web service hosts **both portals at the same URL**, backed by a managed **PostgreSQL**
+database:
 
 - **Candidate portal** — the main page (`/`). Open to anyone with the link.
-- **Manager portal** — the *Manager Intelligence Portal* tab. **Password-protected**; the
-  password is set with the `MANAGER_PASSWORD` environment variable and the manager API
-  endpoints reject any request without it.
+- **Manager portal** — the *Manager Intelligence Portal* tab. Sign in with an **email and
+  password**; every manager API endpoint rejects requests without a valid session token.
 
 ---
 
-## 1. One-time prep (local)
+## Why PostgreSQL and not SQLite
 
-1. Make sure secrets/data are **not** committed. A `.gitignore` is already included that
-   excludes the SQLite database, uploaded resumes, backups, and the virtualenv. Verify:
-   ```
-   git status --short        # smarthire.db, backend/uploads/, .venv/ must NOT appear
-   ```
-   If `backend/smarthire.db` was ever committed before, untrack it (keeps your local copy):
-   ```
-   git rm --cached backend/smarthire.db
-   ```
-2. Commit and push to a GitHub (or GitLab) repository:
-   ```
-   git add .
-   git commit -m "Prepare SmartHire Finance for Render deploy"
-   git push origin main
-   ```
+A Render web service has an **ephemeral filesystem**: it is wiped on every restart,
+redeploy and wake-from-sleep, and the free plan sleeps after ~15 minutes idle. A SQLite
+file stored there would lose every candidate record, repeatedly.
 
-The question bank (`backend/app/data/bank_*.json`) **is** committed — the app needs it.
+The blueprint therefore provisions a **separate managed Postgres instance**. It is its own
+resource, so data survives independently of the app container. For the same reason,
+uploaded resumes are stored **as bytes in the database**, not only as files on disk.
+
+SQLite is still used automatically for local development — no configuration needed.
 
 ---
 
-## 2. Deploy on Render (Blueprint — easiest)
+## 1. What gets stored
 
-1. Push includes `render.yaml`. In Render, click **New + → Blueprint**.
-2. Connect the repository. Render reads `render.yaml` and proposes a **web service**
-   `smarthire-finance` with a **1 GB persistent disk** mounted at `/var/data`.
-3. When prompted, set the one secret value:
-   - **`MANAGER_PASSWORD`** → choose a strong password. This is what managers type to open
-     the Manager portal.
-4. Click **Apply / Create**. Render runs:
-   - Build: `pip install -r requirements.txt`
-   - Start: `uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT`
-5. First boot creates the database and `uploads/` folder on the disk automatically.
-6. Open the service URL (e.g. `https://smarthire-finance.onrender.com`):
-   - Candidates use it directly.
-   - Managers click **Manager Intelligence Portal → enter the password**.
+| Table | Contents |
+|---|---|
+| `candidates` | Name, email, phone, applied role, experience, extracted skills, **resume file bytes** |
+| `assessment_sessions` | Status, scores, verdict, integrity score, adaptive state, full JSON report |
+| `session_questions` | The 80 served questions, the candidate's answer, and correctness |
+| `proctoring_events` | Tab switches, fullscreen exits and similar, with the candidate's local time |
+| `managers` | Manager accounts: email, name, **bcrypt password hash**, role, active flag |
+| `audit_logs` | Who logged in, downloaded a resume, or deleted candidate data, and when |
 
-### Manual alternative (no Blueprint)
-New + → **Web Service** → connect repo → Runtime **Python 3** →
-Build `pip install -r requirements.txt` → Start
-`uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT`.
-Then add a **Disk** (mount `/var/data`, 1 GB) and the env vars:
-`MANAGER_PASSWORD`, `DATABASE_URL=sqlite:////var/data/smarthire.db`,
-`UPLOAD_DIR=/var/data/uploads`, `PYTHON_VERSION=3.12.10`.
+Passwords are never stored in readable form — only a bcrypt hash.
 
 ---
 
-## 3. Free plan (no persistent disk)
+## 2. Deploy (Blueprint — easiest)
 
-Render disks require a paid instance. To try it on the **free** plan, in `render.yaml`:
-- delete the `disk:` block, and
-- delete the `DATABASE_URL` and `UPLOAD_DIR` env vars (the app falls back to paths inside
-  the container).
+1. Push the repository to GitHub (it already contains `render.yaml`).
+2. In Render, click **New + → Blueprint** and select the repository.
+3. Render reads `render.yaml` and proposes **two** resources: the web service
+   `smarthire-finance` and the database `smarthire-db`.
+4. Fill in the two values it asks for:
+   - **`MANAGER_EMAIL`** — the email for the first administrator account, e.g. `you@company.com`
+   - **`MANAGER_PASSWORD`** — a strong password for that account
+5. Click **Apply**. Render creates the database, injects its connection string as
+   `DATABASE_URL`, and generates a `SECRET_KEY` automatically.
+6. On first boot the app creates its tables and the administrator account.
+7. Open the service URL. Managers click **Manager Intelligence Portal** and sign in with
+   the email and password from step 4. **Change the password after signing in.**
 
-⚠️ On free, the container filesystem is **ephemeral**: the database and uploaded resumes
-are **wiped whenever the service restarts, redeploys, or wakes from sleep**. Fine for a demo;
-use the paid disk (or a Postgres migration) for anything you need to keep.
+### Free plan caveats
+- The **web service sleeps** when idle; the first request afterwards takes 30–60 seconds.
+- Render's **free Postgres expires** after a limited trial period and is then removed.
+  For anything long-lived, upgrade the database plan or use the free option below.
+
+---
+
+## 3. Free permanent database (Neon or Supabase)
+
+To avoid the Postgres expiry while keeping the web service free:
+
+1. Create a free Postgres at [neon.tech](https://neon.tech) or
+   [supabase.com](https://supabase.com) and copy its connection string.
+2. In `render.yaml`, delete the whole `databases:` block and replace the `DATABASE_URL`
+   entry (the `fromDatabase:` one) with `- key: DATABASE_URL` / `sync: false`.
+3. Redeploy, then paste the connection string into `DATABASE_URL` in the Render dashboard.
+
+Any `postgres://`, `postgresql://` or `postgresql+psycopg://` form works — the app
+normalises the prefix and adds `sslmode=require` for remote hosts automatically.
 
 ---
 
 ## 4. Environment variables
 
-| Variable | Purpose | Example |
+| Variable | Purpose | Notes |
 |---|---|---|
-| `MANAGER_PASSWORD` | Password for the Manager portal (**set this!**) | `a-strong-secret` |
-| `DATABASE_URL` | SQLite location (point at the disk) | `sqlite:////var/data/smarthire.db` |
-| `UPLOAD_DIR` | Where resumes are stored | `/var/data/uploads` |
+| `DATABASE_URL` | PostgreSQL connection string | Injected by Render from the blueprint |
+| `SECRET_KEY` | Signs manager session tokens | Generated by Render. If unset, a random one is used and managers are logged out on every restart |
+| `MANAGER_EMAIL` | Email of the bootstrap administrator | Used only when no manager accounts exist yet |
+| `MANAGER_PASSWORD` | Password for that administrator | **Set a strong value.** Change it after first login |
 | `PYTHON_VERSION` | Python runtime | `3.12.10` |
+| `UPLOAD_DIR` | Local resume cache directory | Optional; the database is the durable copy |
+| `MAX_RESUME_BYTES` | Largest accepted resume | Defaults to 10 MB |
+| `TOKEN_TTL_SECONDS` | Manager session lifetime | Defaults to 12 hours |
 
-If `MANAGER_PASSWORD` is not set, it defaults to `admin123` (local dev only — **always**
-set a real one in production).
+The app prints a warning at startup if it is running on SQLite, if `SECRET_KEY` is unset,
+or if `MANAGER_PASSWORD` is still the default.
 
 ---
 
-## 5. Run locally
+## 5. Managing manager accounts
 
-```
-python -m venv .venv
-.venv/Scripts/python.exe -m pip install -r requirements.txt   # Windows
-.venv/Scripts/python.exe run.py                               # opens http://127.0.0.1:8000
-```
-`run.py` frees port 8000 first so a stale server can't serve old code. The local manager
-password is `admin123` unless you set `MANAGER_PASSWORD`.
+Signed in as an administrator:
+
+- `GET /api/manager/managers` — list accounts
+- `POST /api/manager/managers` — create one (`email`, `full_name`, `password`, `role`)
+- `PATCH /api/manager/managers/{id}/active?active=false` — deactivate
+- `GET /api/manager/audit-log` — read the audit trail
+
+Roles are `admin` (full access, including account management and the audit log) and
+`recruiter` (candidate data only). Deactivating an account immediately invalidates its
+existing session token. The last active administrator cannot be deactivated.
+
+Anyone signed in can change their own password with `POST /api/manager/change-password`.
+
+---
+
+## 6. Schema changes
+
+Tables are created on first boot, and new columns and indexes are applied by an additive
+migration that runs at every startup. It is idempotent and never drops data, so existing
+databases upgrade in place. It works on both SQLite and PostgreSQL.

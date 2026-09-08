@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models import Candidate, AssessmentSession
-from ..config import UPLOAD_DIR
+from ..config import UPLOAD_DIR, MAX_RESUME_BYTES
 from ..services.resume_parser import ResumeParser
 from ..services.ai_engine import AIEngine
 
@@ -31,6 +31,8 @@ async def register_candidate(
     resume_filename = None
     resume_text = ""
     extracted_skills = []
+    resume_bytes = None
+    resume_mime = None
 
     if resume and resume.filename:
         # Strip any path components from the client-supplied filename before joining it
@@ -38,10 +40,22 @@ async def register_candidate(
         safe_name = os.path.basename(resume.filename.replace("\\", "/"))
         unique_filename = f"{uuid.uuid4().hex}_{safe_name}"
         saved_path = os.path.join(UPLOAD_DIR, unique_filename)
-        
+
+        resume_bytes = await resume.read()
+        if len(resume_bytes) > MAX_RESUME_BYTES:
+            raise HTTPException(
+                status_code=413,
+                detail=f"Resume is too large. The maximum size is {MAX_RESUME_BYTES // (1024 * 1024)} MB.",
+            )
+        resume_mime = resume.content_type or "application/octet-stream"
+
+        # Written to disk as well because the resume parser reads from a path, and a local
+        # copy is a useful cache. The bytes stored on the candidate row are the durable
+        # copy: on a host with an ephemeral filesystem the file below does not survive a
+        # restart, but the database row does.
         with open(saved_path, "wb") as buffer:
-            shutil.copyfileobj(resume.file, buffer)
-            
+            buffer.write(resume_bytes)
+
         resume_filename = unique_filename
         resume_text = ResumeParser.extract_text(saved_path)
         analysis = ResumeParser.analyze_resume(resume_text)
@@ -57,6 +71,9 @@ async def register_candidate(
         years_of_experience=years_of_experience,
         current_company=current_company.strip(),
         resume_filename=resume_filename,
+        resume_data=resume_bytes,
+        resume_mime=resume_mime,
+        resume_size=len(resume_bytes) if resume_bytes else None,
         resume_text=resume_text,
         extracted_skills=str(extracted_skills)
     )

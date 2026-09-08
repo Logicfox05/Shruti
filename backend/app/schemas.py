@@ -3,7 +3,33 @@ from datetime import datetime
 from pydantic import BaseModel
 
 class ManagerLoginRequest(BaseModel):
+    # `email` is optional so a client that still sends only a password keeps working:
+    # it is then treated as a login for the bootstrap administrator account.
+    email: Optional[str] = None
     password: str
+
+
+class ManagerCreateRequest(BaseModel):
+    email: str
+    full_name: str
+    password: str
+    role: Optional[str] = "recruiter"   # admin | recruiter
+
+
+class PasswordChangeRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+
+class ManagerPublic(BaseModel):
+    id: str
+    email: str
+    full_name: str
+    role: str
+    is_active: bool
+    must_change_password: bool
+    created_at: Optional[datetime] = None
+    last_login_at: Optional[datetime] = None
 
 class CandidateRegisterRequest(BaseModel):
     full_name: str

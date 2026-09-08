@@ -3,6 +3,8 @@
 let allCandidatesList = [];
 let radarChartInstance = null;
 let barChartInstance = null;
+// The signed-in manager account ({id, email, full_name, role, must_change_password}).
+let currentManager = null;
 
 // ---- Manager authentication (password-gated portal) ----
 function getMgrToken() {
@@ -34,6 +36,8 @@ function showManagerDashboard() {
 // Called when the password form is submitted.
 async function handleManagerLogin(event) {
   event.preventDefault();
+  const emailEl = document.getElementById("mgrEmail");
+  const email = emailEl ? emailEl.value.trim() : "";
   const pw = document.getElementById("mgrPassword").value;
   const errEl = document.getElementById("mgrLoginError");
   const btn = document.getElementById("btnMgrLogin");
@@ -42,11 +46,12 @@ async function handleManagerLogin(event) {
     const res = await fetch("/api/manager/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password: pw })
+      body: JSON.stringify({ email: email, password: pw })
     });
     if (res.ok) {
       const data = await res.json();
       setMgrToken(data.token);
+      if (data.manager) { currentManager = data.manager; }
       document.getElementById("mgrPassword").value = "";
       showManagerDashboard();
       loadManagerDashboard();
